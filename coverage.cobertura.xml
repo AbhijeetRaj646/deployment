@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
+<coverage line-rate="0.82" branch-rate="0.75" version="1.9" timestamp="1657218492000">
+  <packages>
+    <package name="com.example.module1" line-rate="0.80" branch-rate="0.70">
+      <classes>
+        <class name="ExampleClass1" filename="ExampleClass1.m" line-rate="0.80" branch-rate="0.70">
+          <methods>
+            <method name="functionA" signature="" line-rate="1.0" branch-rate="1.0">
+              <lines>
+                <line number="10" hits="3" branch="false"/>
+                <line number="11" hits="3" branch="false"/>
+              </lines>
+            </method>
+            <method name="functionB" signature="" line-rate="0.5" branch-rate="0.0">
+              <lines>
+                <line number="20" hits="1" branch="false"/>
+                <line number="21" hits="0" branch="false"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="10" hits="3" branch="false"/>
+            <line number="11" hits="3" branch="false"/>
+            <line number="20" hits="1" branch="false"/>
+            <line number="21" hits="0" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>
