@@ -2,9 +2,9 @@ name: Code Coverage Summary Report
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   coverage:
