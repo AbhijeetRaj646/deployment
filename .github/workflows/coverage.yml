@@ -1,40 +1,29 @@
-name: Code Coverage Summary Report
+name: Java CI with Dummy Coverage Report
 
 on:
-  pull_request:
-    branches: [ main ]
   push:
-    branches: [ main ]
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  coverage:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-    - name: Simulate Coverage Report
-      run: |
-        echo "Simulating coverage report..."
-        cp coverage.cobertura.xml coverage.xml
-
-    - name: Generate Coverage Summary
-      uses: irongut/CodeCoverageSummary@v1.3.0
+    - name: Upload dummy JaCoCo report XML
+      uses: actions/upload-artifact@v4
       with:
-        filename: coverage.xml
-        badge: true
-        fail_below_min: true
-        format: markdown
-        hide_branch_rate: false
-        hide_complexity: true
-        indicators: true
-        output: both
-        thresholds: '60 80'
+        name: jacoco-report
+        path: build/reports/jacoco/test/jacocoTestReport.xml
 
-    - name: Post PR Comment
-      if: github.event_name == 'pull_request'
-      uses: marocchino/sticky-pull-request-comment@v2
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
       with:
-        recreate: true
-        path: code-coverage-results.md
+        files: build/reports/jacoco/test/jacocoTestReport.xml
+        flags: unittests
+        name: codecov-jacoco
+        fail_ci_if_error: true
