@@ -1,16 +1,13 @@
-name: Collect Workflow Telemetry
+name: VM Resource Telemetry
 
 on:
   push:
   pull_request:
 
-permissions:
-  pull-requests: write
-  actions: read
-
 jobs:
-  collect-telemetry:
+  system-metrics:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Collect Workflow Telemetry
-        uses: catchpoint/workflow-telemetry-action@v2
+      - name: Capture VM Metrics
+        uses: self-actuated/vmmeter-action@v1
