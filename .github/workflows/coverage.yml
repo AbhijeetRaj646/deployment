@@ -18,12 +18,12 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: jacoco-report
-        path: build/reports/jacoco/test/jacocoTestReport.xml
+        path: coverage.cobertura.xml
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
-        files: build/reports/jacoco/test/jacocoTestReport.xml
+        files: coverage.cobertura.xml
         flags: unittests
         name: codecov-jacoco
         fail_ci_if_error: true
