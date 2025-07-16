@@ -12,7 +12,7 @@ jobs:
   collect-telemetry:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkouut
         uses: actions/checkout@v4
 
       - name: Collect Workflow Telemetry
