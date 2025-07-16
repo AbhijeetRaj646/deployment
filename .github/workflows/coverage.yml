@@ -9,11 +9,11 @@ permissions:
   actions: read
 
 jobs:
-  workflow-telemetry-action:
+  collect-telemetry:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Collect Workflow Telemetry
         uses: catchpoint/workflow-telemetry-action@v2
-      - name: Monitor Runner Resources
-        uses: dorny/monitoring-action@v1
-
