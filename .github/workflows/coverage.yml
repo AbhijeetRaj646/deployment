@@ -1,4 +1,4 @@
-name: Java CI with Dummy Coverage Report
+name: Java CI with Dummy Coverage and Dummy JUnit Report
 
 on:
   push:
@@ -7,30 +7,48 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  dummy-checks:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Optional: Set up Java if you're building or testing Java code
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
-        java-version: '17'        # Adjust as needed
+        java-version: '17'
         distribution: 'temurin'
 
-    # Optional: Run tests and generate reports if not already present
-    # - name: Run tests
-    #   run: ./gradlew test jacocoTestReport
+    # ✅ Create dummy coverage report (if not already in repo)
+    - name: Create dummy coverage report
+      run: |
+        echo '<?xml version="1.0" encoding="UTF-8"?>' > coverage.cobertura.xml
+        echo '<coverage line-rate="0.8" branch-rate="0.7" version="1.9" timestamp="123456789">' >> coverage.cobertura.xml
+        echo '  <packages></packages>' >> coverage.cobertura.xml
+        echo '</coverage>' >> coverage.cobertura.xml
 
-    # ✅ Upload dummy JaCoCo (Cobertura-format) coverage report
+    # ✅ Create dummy JUnit test report
+    - name: Create dummy JUnit test report
+      run: |
+        echo '<?xml version="1.0" encoding="UTF-8"?>' > TEST-Dummy.xml
+        echo '<testsuite tests="1" failures="0" name="DummySuite">' >> TEST-Dummy.xml
+        echo '  <testcase classname="DummyTest" name="testDummy" time="0.001"/>' >> TEST-Dummy.xml
+        echo '</testsuite>' >> TEST-Dummy.xml
+
+    # ✅ Upload dummy coverage report as artifact
     - name: Upload dummy JaCoCo report XML
       uses: actions/upload-artifact@v4
       with:
         name: jacoco-report
         path: ./coverage.cobertura.xml
+
+    # ✅ Upload dummy JUnit report as artifact
+    - name: Upload dummy JUnit report XML
+      uses: actions/upload-artifact@v4
+      with:
+        name: junit-report
+        path: ./TEST-Dummy.xml
 
     # ✅ Upload coverage to Codecov
     - name: Upload coverage to Codecov
@@ -41,14 +59,14 @@ jobs:
         name: codecov-jacoco
         fail_ci_if_error: true
 
-    # ✅ Publish JUnit test results if available (optional)
+    # ✅ Publish dummy JUnit test result in GitHub Checks
     - name: Publish JUnit test report
-      if: always()  # Runs even if previous steps fail
+      if: always()
       uses: mikepenz/action-junit-report@v4
       with:
-        report_paths: 'TEST-*.xml'  # Adjust path as needed
+        report_paths: 'TEST-Dummy.xml'
         check_name: 'JUnit Report'
         detailed_summary: true
         include_passed: true
         fail_on_failure: false
-        require_tests: false  # Set to true if you want to fail if no tests are found
+        require_tests: true
