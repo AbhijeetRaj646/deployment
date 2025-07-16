@@ -14,16 +14,41 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    # Optional: Set up Java if you're building or testing Java code
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'        # Adjust as needed
+        distribution: 'temurin'
+
+    # Optional: Run tests and generate reports if not already present
+    # - name: Run tests
+    #   run: ./gradlew test jacocoTestReport
+
+    # ✅ Upload dummy JaCoCo (Cobertura-format) coverage report
     - name: Upload dummy JaCoCo report XML
       uses: actions/upload-artifact@v4
       with:
         name: jacoco-report
-        path: coverage.cobertura.xml
+        path: ./coverage.cobertura.xml
 
+    # ✅ Upload coverage to Codecov
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
-        files: coverage.cobertura.xml
+        files: ./coverage.cobertura.xml
         flags: unittests
         name: codecov-jacoco
         fail_ci_if_error: true
+
+    # ✅ Publish JUnit test results if available (optional)
+    - name: Publish JUnit test report
+      if: always()  # Runs even if previous steps fail
+      uses: mikepenz/action-junit-report@v4
+      with:
+        report_paths: '**/build/test-results/test/TEST-*.xml'  # Adjust path as needed
+        check_name: 'JUnit Report'
+        detailed_summary: true
+        include_passed: true
+        fail_on_failure: false
+        require_tests: false  # Set to true if you want to fail if no tests are found
