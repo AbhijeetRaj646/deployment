@@ -14,3 +14,6 @@ jobs:
     steps:
       - name: Collect Workflow Telemetry
         uses: catchpoint/workflow-telemetry-action@v2
+      - name: Monitor Runner Resources
+        uses: dorny/monitoring-action@v1
+
