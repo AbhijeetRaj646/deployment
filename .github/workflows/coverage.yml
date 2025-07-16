@@ -1,72 +1,42 @@
-name: Java CI with Dummy Coverage and Dummy JUnit Report
+name: Dummy CI - JUnit Report
 
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
 
 jobs:
-  dummy-checks:
+  dummy-test-report:
+    name: Dummy Test Report
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Create dummy JUnit report
+        run: |
+          mkdir -p reports
+          cat <<EOF > reports/jest-results.xml
+          <?xml version="1.0" encoding="UTF-8"?>
+          <testsuites>
+            <testsuite name="ExampleSuite" tests="2" failures="1" errors="0" skipped="0">
+              <testcase classname="example.ClassA" name="testSuccess" time="0.001"/>
+              <testcase classname="example.ClassA" name="testFailure" time="0.002">
+                <failure message="expected true but got false">AssertionError</failure>
+              </testcase>
+            </testsuite>
+          </testsuites>
+          EOF
 
-    # ✅ Create dummy coverage report (if not already in repo)
-    - name: Create dummy coverage report
-      run: |
-        echo '<?xml version="1.0" encoding="UTF-8"?>' > coverage.cobertura.xml
-        echo '<coverage line-rate="0.8" branch-rate="0.7" version="1.9" timestamp="123456789">' >> coverage.cobertura.xml
-        echo '  <packages></packages>' >> coverage.cobertura.xml
-        echo '</coverage>' >> coverage.cobertura.xml
-
-    # ✅ Create dummy JUnit test report
-    - name: Create dummy JUnit test report
-      run: |
-        echo '<?xml version="1.0" encoding="UTF-8"?>' > TEST-Dummy.xml
-        echo '<testsuite tests="1" failures="0" name="DummySuite">' >> TEST-Dummy.xml
-        echo '  <testcase classname="DummyTest" name="testDummy" time="0.001"/>' >> TEST-Dummy.xml
-        echo '</testsuite>' >> TEST-Dummy.xml
-
-    # ✅ Upload dummy coverage report as artifact
-    - name: Upload dummy JaCoCo report XML
-      uses: actions/upload-artifact@v4
-      with:
-        name: jacoco-report
-        path: ./coverage.cobertura.xml
-
-    # ✅ Upload dummy JUnit report as artifact
-    - name: Upload dummy JUnit report XML
-      uses: actions/upload-artifact@v4
-      with:
-        name: junit-report
-        path: ./TEST-Dummy.xml
-
-    # ✅ Upload coverage to Codecov
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        files: ./coverage.cobertura.xml
-        flags: unittests
-        name: codecov-jacoco
-        fail_ci_if_error: true
-
-    # ✅ Publish dummy JUnit test result in GitHub Checks
-    - name: Publish JUnit test report
-      if: always()
-      uses: mikepenz/action-junit-report@v4
-      with:
-        report_paths: 'TEST-Dummy.xml'
-        check_name: 'JUnit Report'
-        detailed_summary: true
-        include_passed: true
-        fail_on_failure: false
-        require_tests: true
+      - name: Publish Dummy Test Report
+        uses: dorny/test-reporter@v2
+        if: ${{ always() && !cancelled() }}
+        with:
+          name: Dummy JEST Report
+          path: reports/jest-results.xml
+          reporter: jest-junit
