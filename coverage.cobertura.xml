@@ -1,51 +1,29 @@
-<?xml version="1.0"?>
-<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage line-rate="0.83" branch-rate="0.69" lines-covered="1212" lines-valid="1460"
-          branches-covered="262" branches-valid="378" complexity="682"
-          version="1.9" timestamp="1678567640000">
-  <sources>
-    <source>src</source>
-  </sources>
-  <packages>
-    <package name="com.example.module1" line-rate="0.80" branch-rate="0.70" complexity="500">
-      <classes>
-        <class name="ExampleClass1" filename="ExampleClass1.java" line-rate="0.80" branch-rate="0.70" complexity="250">
-          <methods>
-            <method name="add" signature="(int,int)" line-rate="1.0" branch-rate="1.0" complexity="1">
-              <lines>
-                <line number="10" hits="3" branch="false"/>
-                <line number="11" hits="3" branch="false"/>
-              </lines>
-            </method>
-            <method name="subtract" signature="(int,int)" line-rate="0.6" branch-rate="0.4" complexity="1">
-              <lines>
-                <line number="20" hits="1" branch="false"/>
-                <line number="21" hits="0" branch="false"/>
-              </lines>
-            </method>
-          </methods>
-        </class>
-      </classes>
-    </package>
-    <package name="com.example.module2" line-rate="0.87" branch-rate="0.73" complexity="182">
-      <classes>
-        <class name="ExampleClass2" filename="ExampleClass2.java" line-rate="0.87" branch-rate="0.73" complexity="182">
-          <methods>
-            <method name="multiply" signature="(int,int)" line-rate="0.9" branch-rate="0.8" complexity="1">
-              <lines>
-                <line number="30" hits="4" branch="false"/>
-                <line number="31" hits="4" branch="false"/>
-              </lines>
-            </method>
-            <method name="divide" signature="(int,int)" line-rate="0.75" branch-rate="0.67" complexity="1">
-              <lines>
-                <line number="40" hits="2" branch="false"/>
-                <line number="41" hits="1" branch="false"/>
-              </lines>
-            </method>
-          </methods>
-        </class>
-      </classes>
-    </package>
-  </packages>
-</coverage>
+<?xml version="1.0" encoding="UTF-8"?>
+<report name="dummy-project">
+  <sessioninfo id="test-session" start="1699458000000" dump="1699458000000"/>
+  <package name="com/example">
+    <class name="com/example/MyClass" sourcefilename="MyClass.java">
+      <method name="myMethod" desc="()V" line="10">
+        <counter type="INSTRUCTION" missed="0" covered="10"/>
+        <counter type="LINE" missed="0" covered="1"/>
+        <counter type="COMPLEXITY" missed="0" covered="1"/>
+        <counter type="METHOD" missed="0" covered="1"/>
+      </method>
+      <counter type="INSTRUCTION" missed="5" covered="10"/>
+      <counter type="LINE" missed="1" covered="2"/>
+      <counter type="COMPLEXITY" missed="0" covered="1"/>
+      <counter type="METHOD" missed="0" covered="1"/>
+      <counter type="CLASS" missed="0" covered="1"/>
+    </class>
+    <counter type="INSTRUCTION" missed="5" covered="10"/>
+    <counter type="LINE" missed="1" covered="2"/>
+    <counter type="COMPLEXITY" missed="0" covered="1"/>
+    <counter type="METHOD" missed="0" covered="1"/>
+    <counter type="CLASS" missed="0" covered="1"/>
+  </package>
+  <counter type="INSTRUCTION" missed="5" covered="10"/>
+  <counter type="LINE" missed="1" covered="2"/>
+  <counter type="COMPLEXITY" missed="0" covered="1"/>
+  <counter type="METHOD" missed="0" covered="1"/>
+  <counter type="CLASS" missed="0" covered="1"/>
+</report>
