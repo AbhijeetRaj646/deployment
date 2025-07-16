@@ -46,7 +46,7 @@ jobs:
       if: always()  # Runs even if previous steps fail
       uses: mikepenz/action-junit-report@v4
       with:
-        report_paths: '**/build/test-results/test/TEST-*.xml'  # Adjust path as needed
+        report_paths: 'TEST-*.xml'  # Adjust path as needed
         check_name: 'JUnit Report'
         detailed_summary: true
         include_passed: true
