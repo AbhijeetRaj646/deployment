@@ -1,42 +1,18 @@
-name: Dummy CI - JUnit Report
+name: Collect Workflow Telemetry
 
 on:
   push:
   pull_request:
 
 permissions:
-  contents: read
-  actions: read
-  checks: write
+  pull-requests: write
 
 jobs:
-  dummy-test-report:
-    name: Dummy Test Report
+  workflow-telemetry-action:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create dummy JUnit report
-        run: |
-          mkdir -p reports
-          cat <<EOF > reports/jest-results.xml
-          <?xml version="1.0" encoding="UTF-8"?>
-          <testsuites>
-            <testsuite name="ExampleSuite" tests="2" failures="1" errors="0" skipped="0">
-              <testcase classname="example.ClassA" name="testSuccess" time="0.001"/>
-              <testcase classname="example.ClassA" name="testFailure" time="0.002">
-                <failure message="expected true but got false">AssertionError</failure>
-              </testcase>
-            </testsuite>
-          </testsuites>
-          EOF
-
-      - name: Publish Dummy Test Report
-        uses: dorny/test-reporter@v2
-        if: ${{ always() && !cancelled() }}
-        with:
-          name: Dummy JEST Report
-          path: reports/jest-results.xml
-          reporter: jest-junit
+      - name: Collect Workflow Telemetry
+        uses: catchpoint/workflow-telemetry-action@v2
