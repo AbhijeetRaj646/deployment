@@ -1,0 +1,303 @@
+-- =====================================================
+-- Code Coverage Dashboard - DAX Measures
+-- =====================================================
+
+-- =====================================================
+-- BASIC COVERAGE CALCULATIONS
+-- =====================================================
+
+-- Line Coverage Percentage
+Line_Coverage_Pct = 
+DIVIDE(
+    SUM(FactCoverage[Execution]),
+    SUM(FactCoverage[TBL]),
+    0
+) * 100
+
+-- Branch Coverage Percentage  
+Branch_Coverage_Pct = 
+DIVIDE(
+    SUM(FactCoverage[Condition]),
+    SUM(FactCoverage[Decision]),
+    0
+) * 100
+
+-- Function Coverage Percentage
+Function_Coverage_Pct = 
+DIVIDE(
+    COUNTROWS(FILTER(FactCoverage, FactCoverage[Execution] > 0)),
+    COUNTROWS(FactCoverage),
+    0
+) * 100
+
+-- MCDC Coverage Percentage
+MCDC_Coverage_Pct = 
+DIVIDE(
+    SUM(FactCoverage[MCDC]),
+    SUM(FactCoverage[Decision]),
+    0
+) * 100
+
+-- =====================================================
+-- AGGREGATED METRICS
+-- =====================================================
+
+-- Total Lines of Code
+Total_Lines = SUM(FactCoverage[TBL])
+
+-- Total Executed Lines
+Total_Executed = SUM(FactCoverage[Execution])
+
+-- Total Modules
+Total_Modules = DISTINCTCOUNT(FactCoverage[Module])
+
+-- Total Test Cases
+Total_TestCases = DISTINCTCOUNT(FactCoverage[Script Name])
+
+-- Average Complexity
+Avg_Complexity = AVERAGE(FactCoverage[Complexity])
+
+-- =====================================================
+-- CONDITIONAL FORMATTING MEASURES
+-- =====================================================
+
+-- Coverage Status Color
+Coverage_Status_Color = 
+SWITCH(
+    TRUE(),
+    [Line_Coverage_Pct] >= 90, "#2E7D32",  -- Dark Green
+    [Line_Coverage_Pct] >= 80, "#4CAF50",  -- Green
+    [Line_Coverage_Pct] >= 70, "#8BC34A",  -- Light Green
+    [Line_Coverage_Pct] >= 60, "#FFC107",  -- Amber
+    [Line_Coverage_Pct] >= 50, "#FF9800",  -- Orange
+    [Line_Coverage_Pct] >= 40, "#FF5722",  -- Deep Orange
+    "#D32F2F"                              -- Red
+)
+
+-- Coverage Grade
+Coverage_Grade = 
+SWITCH(
+    TRUE(),
+    [Line_Coverage_Pct] >= 90, "Excellent",
+    [Line_Coverage_Pct] >= 80, "Good",
+    [Line_Coverage_Pct] >= 70, "Fair",
+    [Line_Coverage_Pct] >= 60, "Poor",
+    "Critical"
+)
+
+-- =====================================================
+-- TREND ANALYSIS MEASURES
+-- =====================================================
+
+-- Previous Build Coverage
+Previous_Build_Coverage = 
+VAR CurrentBuild = SELECTEDVALUE(FactCoverage[Build Number])
+VAR PreviousBuild = 
+    CALCULATE(
+        MAX(FactCoverage[Build Number]),
+        FILTER(
+            ALL(FactCoverage[Build Number]),
+            FactCoverage[Build Number] < CurrentBuild
+        )
+    )
+RETURN
+    CALCULATE(
+        [Line_Coverage_Pct],
+        FactCoverage[Build Number] = PreviousBuild
+    )
+
+-- Coverage Trend
+Coverage_Trend = 
+VAR Current = [Line_Coverage_Pct]
+VAR Previous = [Previous_Build_Coverage]
+RETURN
+    IF(
+        ISBLANK(Previous),
+        "No Previous Data",
+        IF(
+            Current > Previous,
+            "↗ Improving",
+            IF(
+                Current < Previous,
+                "↘ Declining",
+                "→ Stable"
+            )
+        )
+    )
+
+-- Coverage Change
+Coverage_Change = [Line_Coverage_Pct] - [Previous_Build_Coverage]
+
+-- =====================================================
+-- TOP/BOTTOM PERFORMERS
+-- =====================================================
+
+-- Top Module Coverage
+Top_Module_Coverage = 
+MAXX(
+    TOPN(1, VALUES(FactCoverage[Module]), [Line_Coverage_Pct], DESC),
+    [Line_Coverage_Pct]
+)
+
+-- Bottom Module Coverage
+Bottom_Module_Coverage = 
+MINX(
+    TOPN(1, VALUES(FactCoverage[Module]), [Line_Coverage_Pct], ASC),
+    [Line_Coverage_Pct]
+)
+
+-- Modules Above Target (80%)
+Modules_Above_Target = 
+COUNTROWS(
+    FILTER(
+        SUMMARIZE(FactCoverage, FactCoverage[Module]),
+        [Line_Coverage_Pct] >= 80
+    )
+)
+
+-- Modules Below Target
+Modules_Below_Target = 
+COUNTROWS(
+    FILTER(
+        SUMMARIZE(FactCoverage, FactCoverage[Module]),
+        [Line_Coverage_Pct] < 80
+    )
+)
+
+-- =====================================================
+-- DYNAMIC TITLES AND CONTEXT
+-- =====================================================
+
+-- Dynamic Page Title
+Page_Title = 
+"Code Coverage Dashboard - " & 
+IF(
+    ISFILTERED(FactCoverage[Build Number]),
+    "Build " & SELECTEDVALUE(FactCoverage[Build Number]),
+    "All Builds (" & [Total_Builds] & ")"
+)
+
+-- Selected Build Info
+Selected_Build_Info = 
+IF(
+    ISFILTERED(FactCoverage[Build Number]),
+    "Build: " & SELECTEDVALUE(FactCoverage[Build Number]) & 
+    " | Modules: " & [Total_Modules] & 
+    " | Coverage: " & FORMAT([Line_Coverage_Pct], "0.1%"),
+    "All Builds Summary"
+)
+
+-- Total Builds
+Total_Builds = DISTINCTCOUNT(FactCoverage[Build Number])
+
+-- =====================================================
+-- PERCENTAGE FORMATTING MEASURES
+-- =====================================================
+
+-- Line Coverage Formatted
+Line_Coverage_Display = FORMAT([Line_Coverage_Pct], "0.0%")
+
+-- Branch Coverage Formatted
+Branch_Coverage_Display = FORMAT([Branch_Coverage_Pct], "0.0%")
+
+-- Function Coverage Formatted
+Function_Coverage_Display = FORMAT([Function_Coverage_Pct], "0.0%")
+
+-- =====================================================
+-- FILTERING MEASURES
+-- =====================================================
+
+-- Is Current Build
+Is_Current_Build = 
+VAR MaxBuild = CALCULATE(MAX(FactCoverage[Build Number]), ALL(FactCoverage))
+VAR CurrentBuild = SELECTEDVALUE(FactCoverage[Build Number])
+RETURN CurrentBuild = MaxBuild
+
+-- Coverage Category
+Coverage_Category = 
+SWITCH(
+    TRUE(),
+    [Line_Coverage_Pct] >= 80, "High Coverage",
+    [Line_Coverage_Pct] >= 60, "Medium Coverage",
+    "Low Coverage"
+)
+
+-- =====================================================
+-- COMPLEXITY ANALYSIS
+-- =====================================================
+
+-- High Complexity Low Coverage
+High_Complexity_Low_Coverage = 
+COUNTROWS(
+    FILTER(
+        FactCoverage,
+        FactCoverage[Complexity] > 10 && 
+        DIVIDE(FactCoverage[Execution], FactCoverage[TBL]) < 0.6
+    )
+)
+
+-- Complexity vs Coverage Ratio
+Complexity_Coverage_Ratio = 
+DIVIDE([Avg_Complexity], [Line_Coverage_Pct], 0)
+
+-- =====================================================
+-- BUILD COMPARISON MEASURES
+-- =====================================================
+
+-- Last 5 Builds Average
+Last_5_Builds_Avg = 
+VAR Last5Builds = 
+    TOPN(5, VALUES(FactCoverage[Build Number]), FactCoverage[Build Number], DESC)
+RETURN
+    CALCULATE(
+        [Line_Coverage_Pct],
+        FactCoverage[Build Number] IN Last5Builds
+    )
+
+-- Build Performance vs Average
+Build_vs_Average = 
+[Line_Coverage_Pct] - [Last_5_Builds_Avg]
+
+-- =====================================================
+-- DRILL-THROUGH CONTEXT MEASURES
+-- =====================================================
+
+-- Module Context
+Module_Context = 
+"Module: " & SELECTEDVALUE(FactCoverage[Module]) &
+" | Scripts: " & DISTINCTCOUNT(FactCoverage[Script Name]) &
+" | Coverage: " & FORMAT([Line_Coverage_Pct], "0.1%")
+
+-- Script Level Coverage
+Script_Coverage = 
+DIVIDE(
+    SUM(FactCoverage[Execution]),
+    SUM(FactCoverage[TBL]),
+    0
+) * 100
+
+-- =====================================================
+-- TOOLTIP MEASURES
+-- =====================================================
+
+-- Detailed Tooltip
+Coverage_Tooltip = 
+"Module: " & SELECTEDVALUE(FactCoverage[Module]) & UNICHAR(10) &
+"Line Coverage: " & FORMAT([Line_Coverage_Pct], "0.1%") & UNICHAR(10) &
+"Branch Coverage: " & FORMAT([Branch_Coverage_Pct], "0.1%") & UNICHAR(10) &
+"Executed/Total: " & [Total_Executed] & "/" & [Total_Lines] & UNICHAR(10) &
+"Complexity: " & FORMAT([Avg_Complexity], "0.0")
+
+-- =====================================================
+-- EXPORT/SUMMARY MEASURES
+-- =====================================================
+
+-- Summary Export
+Coverage_Summary_Export = 
+"Build " & SELECTEDVALUE(FactCoverage[Build Number]) & 
+" Summary:" & UNICHAR(10) &
+"Line Coverage: " & FORMAT([Line_Coverage_Pct], "0.0%") & UNICHAR(10) &
+"Branch Coverage: " & FORMAT([Branch_Coverage_Pct], "0.0%") & UNICHAR(10) &
+"Function Coverage: " & FORMAT([Function_Coverage_Pct], "0.0%") & UNICHAR(10) &
+"Total Modules: " & [Total_Modules] & UNICHAR(10) &
+"Status: " & [Coverage_Grade]
