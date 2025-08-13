@@ -1,7 +1,7 @@
 {
   "name": "Defence Academy",
   "short_name": "DefenceAcad",
-  "start_url": "/",
+  "start_url": "/deployment/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0a2540",
