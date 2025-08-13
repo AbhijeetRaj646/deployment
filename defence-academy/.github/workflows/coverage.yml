@@ -1,0 +1,16 @@
+name: Collect Workflow Telemetry
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  pull-requests: write
+  actions: read
+
+jobs:
+  collect-telemetry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect Workflow Telemetry
+        uses: catchpoint/workflow-telemetry-action@v2

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://abhijeetraj646.github.io/deployment/sitemap.xml

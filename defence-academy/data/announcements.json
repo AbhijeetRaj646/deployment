@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "NDA I 2025 Notification Released",
+    "date": "2025-01-10",
+    "urgent": true,
+    "link": "#",
+    "description": "Application window is now open. Check eligibility and important dates."
+  },
+  {
+    "id": 2,
+    "title": "AFCAT Preparation Workshop",
+    "date": "2025-01-05",
+    "urgent": false,
+    "link": "#",
+    "description": "Join our 7-day high-intensity workshop starting next week. Limited seats."
+  },
+  {
+    "id": 3,
+    "title": "SSB Mock Interviews - January Batch",
+    "date": "2024-12-28",
+    "urgent": false,
+    "link": "#",
+    "description": "Reserve your slot for GTO, Psych, and PI sessions with veterans."
+  }
+]
