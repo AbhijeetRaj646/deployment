@@ -1,0 +1,167 @@
+{
+  "name": "Naukri DevOps Job Application Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "cronExpression": "0 9 * * 1-5"
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "notes": "Runs every weekday at 9 AM."
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "resource": "actor",
+        "operation": "runActorTask",
+        "actorTaskId": "<APIFY_TASK_ID>",
+        "waitForFinish": true,
+        "additionalFields": {
+          "input": "{\"searchQuery\":\"DevOps Engineer\",\"location\":\"India\",\"experience\":\"2-5\"}"
+        },
+        "options": {},
+        "apiKey": "={{$env.APIFY_API_KEY}}"
+      },
+      "name": "Scrape Naukri Jobs (Apify)",
+      "type": "n8n-nodes-base.apify",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "notes": "Scrapes Naukri.com for DevOps Engineer jobs using Apify. Configure your Apify API key in environment variables."
+    },
+    {
+      "parameters": {
+        "functionCode": "// Filter jobs by keywords and limit to 20-50 jobs per run\nconst keywords = ['AWS', 'Kubernetes', 'CI/CD'];\nconst maxJobs = 30; // Change as needed (20-50)\nlet filtered = items.filter(item => {\n  const desc = (item.json.description || '').toLowerCase();\n  return keywords.some(k => desc.includes(k.toLowerCase()));\n});\nfiltered = filtered.slice(0, maxJobs);\n// Simulate application: add status and notes\nreturn filtered.map((item, idx) => {\n  // Placeholder for application logic.\n  // To automate real applications, use Selenium or Puppeteer with Naukri login.\n  // Here, we simulate a random success/failure.\n  const success = Math.random() > 0.1; // 90% success rate\n  return {\n    json: {\n      ...item.json,\n      Job_ID: `JOB-${Date.now()}-${idx}`.toString(),\n      Status: success ? 'Applied' : 'Failed',\n      Applied_Date: new Date().toISOString(),\n      Notes: success ? 'Application simulated.' : 'Application failed (simulated).',\n      Application_Success: success\n    }\n  };\n});"
+      },
+      "name": "Filter & Simulate Application",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "notes": "Filters jobs by keywords and simulates application. Extend with Selenium for real automation."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json[\"Application_Success\"]}}",
+              "operation": "isFalse"
+            }
+          ]
+        }
+      },
+      "name": "IF Application Failed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "notes": "Checks if the simulated application failed."
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sheetId": "<GOOGLE_SHEET_ID>",
+        "range": "Sheet1!A:F",
+        "options": {},
+        "valueInputOption": "USER_ENTERED",
+        "data": "={{ [ $json.Job_ID, $json.title, $json.company, $json.Status, $json.Applied_Date, $json.url, $json.Notes ] }}"
+      },
+      "name": "Append to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [1000, 300],
+      "notes": "Appends job application result to Google Sheets. Configure OAuth2 credentials."
+    },
+    {
+      "parameters": {
+        "fromEmail": "<YOUR_EMAIL>",
+        "toEmail": "<YOUR_EMAIL>",
+        "subject": "Naukri DevOps Job Application Summary",
+        "text": "={{ $items.map(i => `${i.json.title} at ${i.json.company}: ${i.json.Status} (${i.json.url})`).join('\n') }}"
+      },
+      "name": "Send Email Summary",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1200, 300],
+      "notes": "Sends a summary email after workflow completion. Configure SMTP credentials."
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Scrape Naukri Jobs (Apify)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Naukri Jobs (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Filter & Simulate Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter & Simulate Application": {
+      "main": [
+        [
+          {
+            "node": "IF Application Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Application Failed": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Google Sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Email Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "tags": [
+    {
+      "name": "naukri"
+    },
+    {
+      "name": "devops"
+    },
+    {
+      "name": "automation"
+    }
+  ],
+  "__documentation": "\n# Naukri DevOps Job Application Automation Workflow\n\n- **Schedule Trigger**: Runs daily at 9 AM on weekdays.\n- **Scrape Naukri Jobs (Apify)**: Uses Apify actor to scrape jobs. Set your Apify API key in environment variables or n8n credentials.\n- **Filter & Simulate Application**: Filters jobs by keywords (AWS, Kubernetes, CI/CD), limits to 20-50 jobs, and simulates application. Extend with Selenium for real automation.\n- **IF Application Failed**: Branches on application success/failure.\n- **Append to Google Sheet**: Tracks application status. Set up Google Sheets OAuth2 credentials.\n- **Send Email Summary**: Notifies you of the run summary. Configure SMTP/email credentials.\n\n## Credentials\n- **Apify**: Set API key in n8n credentials or as $env.APIFY_API_KEY.\n- **Google Sheets**: Use OAuth2. Set up in n8n credentials.\n- **Naukri Login**: For real automation, integrate Selenium/Puppeteer and store credentials securely in n8n.\n- **Email**: Configure SMTP/email credentials in n8n.\n\n## Notes\n- This workflow is modular and free-tier compatible.\n- Do not use for aggressive botting.\n- For real applications, replace simulation with browser automation.\n- Update placeholders (API keys, sheet IDs, emails) before use.\n"
+}
