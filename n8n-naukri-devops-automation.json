@@ -1,0 +1,257 @@
+{
+  "name": "Naukri DevOps Job Application Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "cronExpression": "0 9 * * 1-5"
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "notes": "Runs every weekday at 9 AM."
+    },
+    {
+      "parameters": {
+        "functionCode": "// Set search parameters for Apify actor\nreturn [{\n  searchQuery: 'DevOps Engineer',\n  location: 'India', // Change as needed\n  experience: '2-5'\n}];"
+      },
+      "name": "Set Search Params",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "notes": "Set Naukri search parameters."
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "resource": "actor",
+        "operation": "run",
+        "actorId": "apify/naukri-scraper", // Replace with actual Apify actor ID
+        "runInput": "={{ $json }}",
+        "waitForFinish": true,
+        "additionalFields": {},
+        "options": {},
+        "credentials": {
+          "apifyApiKey": "{{APIFY_API_KEY}}" // Set in n8n credentials
+        }
+      },
+      "name": "Apify Naukri Scraper",
+      "type": "n8n-nodes-base.apify",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "notes": "Scrape Naukri for DevOps jobs. Configure Apify API key in credentials."
+    },
+    {
+      "parameters": {
+        "functionCode": "// Filter jobs by keywords and limit to 20-50\nconst keywords = ['AWS', 'Kubernetes', 'CI/CD'];\nconst maxJobs = 30; // Change as needed\nlet filtered = items.filter(item => {\n  const desc = (item.json.description || '').toLowerCase();\n  return keywords.some(k => desc.includes(k.toLowerCase()));\n});\nfiltered = filtered.slice(0, maxJobs);\n// Generate Job_ID and prepare for application\nreturn filtered.map((item, idx) => {\n  item.json.Job_ID = `JOB${Date.now()}_${idx}`;\n  item.json.Status = 'Pending';\n  item.json.Notes = '';\n  return item;\n});"
+      },
+      "name": "Filter & Prepare Jobs",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "notes": "Filter jobs by keywords and limit count. Add Job_ID."
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://www.naukri.com/apply", // Placeholder URL
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ { jobId: $json.Job_ID, jobUrl: $json.url, position: $json.title, company: $json.company } }}",
+        "authentication": "none" // For real automation, use browser automation (Selenium, Apify Puppeteer, etc.)
+      },
+      "name": "Simulate Application",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1000, 300],
+      "notes": "Simulate job application. Replace with browser automation for real applications."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json[\"statusCode\"] || 200 }}",
+              "operation": "notEqual",
+              "value2": 200
+            }
+          ]
+        }
+      },
+      "name": "IF Application Failed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1200, 300],
+      "notes": "Check if application failed."
+    },
+    {
+      "parameters": {
+        "functionCode": "// Set status and note for failed application\nitem.json.Status = 'Failed';\nitem.json.Notes = 'Application failed (simulated)';\nreturn item;"
+      },
+      "name": "Set Failed Status",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1400, 200],
+      "notes": "Set status to Failed if application fails."
+    },
+    {
+      "parameters": {
+        "functionCode": "// Set status for successful application\nitem.json.Status = 'Applied';\nitem.json.Applied_Date = new Date().toISOString();\nreturn item;"
+      },
+      "name": "Set Applied Status",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1400, 400],
+      "notes": "Set status to Applied if application succeeds."
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "sheet",
+        "operation": "append",
+        "sheetId": "{{GOOGLE_SHEET_ID}}", // Set in credentials
+        "range": "Sheet1!A:F",
+        "options": {},
+        "valueInputOption": "USER_ENTERED",
+        "additionalFields": {},
+        "data": "={{ [ $json.Job_ID, $json.title, $json.company, $json.Status, $json.Applied_Date || '', $json.url, $json.Notes ] }}"
+      },
+      "name": "Google Sheets - Append Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 2,
+      "position": [1600, 300],
+      "notes": "Append job status to Google Sheet. Configure OAuth2 credentials."
+    },
+    {
+      "parameters": {
+        "fromEmail": "your@email.com", // Set in credentials
+        "toEmail": "notify@email.com", // Set in credentials
+        "subject": "Naukri DevOps Job Application Summary",
+        "text": "={{ $items().map(i => `${i.json.title} at ${i.json.company}: ${i.json.Status}`).join('\n') }}",
+        "html": "<p>See attached summary.</p>"
+      },
+      "name": "Send Email Notification (Optional)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1800, 300],
+      "notes": "Send summary email after run. Configure SMTP credentials."
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Search Params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Search Params": {
+      "main": [
+        [
+          {
+            "node": "Apify Naukri Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Naukri Scraper": {
+      "main": [
+        [
+          {
+            "node": "Filter & Prepare Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter & Prepare Jobs": {
+      "main": [
+        [
+          {
+            "node": "Simulate Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate Application": {
+      "main": [
+        [
+          {
+            "node": "IF Application Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Application Failed": {
+      "main": [
+        [
+          {
+            "node": "Set Failed Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Applied Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Failed Status": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Append Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Applied Status": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Append Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Append Row": {
+      "main": [
+        [
+          {
+            "node": "Send Email Notification (Optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [
+    "naukri",
+    "devops",
+    "automation",
+    "job-application"
+  ],
+  "versionId": "1.0.0",
+  "__documentation": "\n- Configure Apify, Google Sheets, and Email credentials in n8n's credential manager.\n- For real job applications, replace the HTTP Request node with a browser automation solution (e.g., Selenium, Apify Puppeteer).\n- This workflow is modular and free-tier compatible.\n- Do not use for aggressive botting; respect Naukri's terms of service.\n- Update search parameters and credentials as needed.\n- Sheet columns: Job_ID, Position, Company, Status, Applied_Date, Job_URL, Notes.\n"
+}
